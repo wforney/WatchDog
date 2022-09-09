@@ -1,9 +1,15 @@
-﻿using WatchDog.src.Interfaces;
+﻿namespace WatchDog.src.Models;
 
-namespace WatchDog.src.Models
+using global::WatchDog.src.Interfaces;
+
+/// <summary>
+/// The service provider factory class.
+/// </summary>
+public static class ServiceProviderFactory
 {
-    public static class ServiceProviderFactory
-    {
-        public static IBroadcastHelper BroadcastHelper { get; set; }
-    }
+    /// <summary>
+    /// Gets or sets the broadcast helper.
+    /// </summary>
+    /// <value>The broadcast helper.</value>
+    public static IBroadcastHelper? BroadcastHelper { get; set; }
 }

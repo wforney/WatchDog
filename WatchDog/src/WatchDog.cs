@@ -20,7 +20,7 @@ internal class WatchDog
 	private readonly RecyclableMemoryStreamManager _recyclableMemoryStreamManager;
 
 	/// <summary>
-	/// Initializes a new instance of the <see cref="WatchDog"/> class.
+	/// Initializes a new instance of the <see cref="WatchDog" /> class.
 	/// </summary>
 	/// <param name="options">The options.</param>
 	/// <param name="next">The next request delegate.</param>

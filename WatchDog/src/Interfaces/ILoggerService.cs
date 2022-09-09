@@ -1,7 +1,12 @@
-﻿namespace WatchDog.src.Interfaces
+﻿namespace WatchDog.src.Interfaces;
+
+/// <summary>
+/// The logger service interface.
+/// </summary>
+internal interface ILoggerService
 {
-    internal interface ILoggerService
-    {
-        void ClearWatchLogs();
-    }
+    /// <summary>
+    /// Clears the watch logs.
+    /// </summary>
+    void ClearWatchLogs();
 }

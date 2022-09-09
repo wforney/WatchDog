@@ -1,35 +1,50 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using System.Threading.Tasks;
-using WatchDog.src.Hubs;
-using WatchDog.src.Interfaces;
-using WatchDog.src.Models;
+﻿namespace WatchDog.src.Helpers;
 
-namespace WatchDog.src.Helpers
+using global::WatchDog.src.Hubs;
+using global::WatchDog.src.Interfaces;
+using global::WatchDog.src.Models;
+using Microsoft.AspNetCore.SignalR;
+
+internal class BroadcastHelper : IBroadcastHelper
 {
-    internal class BroadcastHelper : IBroadcastHelper
-    {
-        private readonly IHubContext<LoggerHub> _hubContext;
-        public BroadcastHelper(IHubContext<LoggerHub> hubContext)
-        {
-            _hubContext = hubContext;
-        }
+	private readonly IHubContext<LoggerHub> _hubContext;
 
-        public async Task BroadcastWatchLog(WatchLog log)
-        {
-            var result = new { log = log, type = "rqLog" };
-            await _hubContext.Clients.All.SendAsync("getLogs", result);
-        }
+	/// <summary>
+	/// Initializes a new instance of the <see cref="BroadcastHelper"/> class.
+	/// </summary>
+	/// <param name="hubContext">The hub context.</param>
+	public BroadcastHelper(IHubContext<LoggerHub> hubContext)
+	{
+		_hubContext = hubContext;
+	}
 
-        public async Task BroadcastLog(WatchLoggerModel log)
-        {
-            var result = new { log = log, type = "log" };
-            await _hubContext.Clients.All.SendAsync("getLogs", result);
-        }
+	/// <summary>
+	/// Broadcasts the ex log.
+	/// </summary>
+	/// <param name="log">The log.</param>
+	public async Task BroadcastExLog(WatchExceptionLog log)
+	{
+		var result = new { log, type = "exLog" };
+		await _hubContext.Clients.All.SendAsync("getLogs", result);
+	}
 
-        public async Task BroadcastExLog(WatchExceptionLog log)
-        {
-            var result = new { log = log, type = "exLog" };
-            await _hubContext.Clients.All.SendAsync("getLogs", result);
-        }
-    }
+	/// <summary>
+	/// Broadcasts the log.
+	/// </summary>
+	/// <param name="log">The log.</param>
+	public async Task BroadcastLog(WatchLoggerModel log)
+	{
+		var result = new { log, type = "log" };
+		await _hubContext.Clients.All.SendAsync("getLogs", result);
+	}
+
+	/// <summary>
+	/// Broadcasts the watch log.
+	/// </summary>
+	/// <param name="log">The log.</param>
+	public async Task BroadcastWatchLog(WatchLog log)
+	{
+		var result = new { log, type = "rqLog" };
+		await _hubContext.Clients.All.SendAsync("getLogs", result);
+	}
 }

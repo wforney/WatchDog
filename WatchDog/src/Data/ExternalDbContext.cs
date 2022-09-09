@@ -1,61 +1,133 @@
-﻿using Dapper;
+﻿namespace WatchDog.src.Data;
+
+using Dapper;
+using global::WatchDog.src.Enums;
+using global::WatchDog.src.Exceptions;
+using global::WatchDog.src.Models;
+using global::WatchDog.src.Utilities;
+using Microsoft.Data.SqlClient;
 using MySql.Data.MySqlClient;
 using Npgsql;
-using System;
 using System.Data;
-using System.Data.SqlClient;
-using System.Diagnostics;
-using WatchDog.src.Enums;
-using WatchDog.src.Exceptions;
-using WatchDog.src.Models;
-using WatchDog.src.Utilities;
 
-namespace WatchDog.src.Data
+internal static class ExternalDbContext
 {
-    internal static class ExternalDbContext
+    private static readonly string _connectionString = WatchDogExternalDbConfig.ConnectionString;
+
+    /// <summary>
+    /// Bootstraps the tables.
+    /// </summary>
+    /// <exception cref="WatchDogDatabaseException"></exception>
+    public static async Task BootstrapTables()
     {
-        private static string _connectionString = WatchDogExternalDbConfig.ConnectionString;
+        var createWatchTablesQuery = GetSqlQueryString();
 
-        public static IDbConnection CreateConnection()
-            => WatchDogSqlDriverOption.SqlDriverOption switch
-            {
-                WatchDogSqlDriverEnum.MSSQL => CreateMSSQLConnection(),
-                WatchDogSqlDriverEnum.MySql => CreateMySQLConnection(),
-                WatchDogSqlDriverEnum.PostgreSql => CreatePostgresConnection(),
-                _ => throw new NotSupportedException()
-            };
-
-
-        public static void Migrate() => BootstrapTables();
-
-        public static void BootstrapTables()
+        using var connection = CreateConnection();
+        try
         {
-            var createWatchTablesQuery = GetSqlQueryString();
-
-            using (var connection = CreateConnection())
+            switch (connection)
             {
-                try
-                {
+                case SqlConnection sqlConnection:
+                    await sqlConnection.OpenAsync();
+                    break;
+                case MySqlConnection mySqlConnection:
+                    await mySqlConnection.OpenAsync();
+                    break;
+                case NpgsqlConnection postgreSqlConnection:
+                    await postgreSqlConnection.OpenAsync();
+                    break;
+                default:
                     connection.Open();
-                    _ =  connection.Query(createWatchTablesQuery);
-                    connection.Close();
-                }
-                catch (SqlException ae)
-                {
-                    Debug.WriteLine(ae.Message.ToString());
-                    throw ae;
-                }
-                catch (Exception ex)
-                {
-                    throw new WatchDogDatabaseException(ex.Message);
-                }
+                    break;
             }
-        }
 
-        public static string GetSqlQueryString() =>
-            WatchDogSqlDriverOption.SqlDriverOption switch
-            {
-                WatchDogSqlDriverEnum.MSSQL => @$"
+            _ = await connection.QueryAsync(createWatchTablesQuery);
+
+            connection.Close();
+        }
+        catch (SqlException ae)
+        {
+            Debug.WriteLine(ae.Message.ToString());
+            throw ae;
+        }
+        catch (Exception ex)
+        {
+            throw new WatchDogDatabaseException(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Creates the connection.
+    /// </summary>
+    /// <returns>IDbConnection.</returns>
+    public static IDbConnection CreateConnection()
+        => WatchDogSqlDriverOption.SqlDriverOption switch
+        {
+            WatchDogSqlDriverEnum.MSSQL => CreateMSSQLConnection(),
+            WatchDogSqlDriverEnum.MySql => CreateMySQLConnection(),
+            WatchDogSqlDriverEnum.PostgreSql => CreatePostgresConnection(),
+            _ => throw new NotSupportedException()
+        };
+
+    /// <summary>
+    /// Creates the MSSQL connection.
+    /// </summary>
+    /// <returns>SqlConnection.</returns>
+    /// <exception cref="WatchDogDatabaseException"></exception>
+    public static SqlConnection CreateMSSQLConnection()
+    {
+        try
+        {
+            return new SqlConnection(_connectionString);
+        }
+        catch (Exception ex)
+        {
+            throw new WatchDogDatabaseException(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Creates my SQL connection.
+    /// </summary>
+    /// <returns>MySqlConnection.</returns>
+    /// <exception cref="WatchDogDatabaseException"></exception>
+    public static MySqlConnection CreateMySQLConnection()
+    {
+        try
+        {
+            return new MySqlConnection(_connectionString);
+        }
+        catch (Exception ex)
+        {
+            throw new WatchDogDatabaseException(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Creates the postgres connection.
+    /// </summary>
+    /// <returns>NpgsqlConnection.</returns>
+    /// <exception cref="WatchDogDatabaseException"></exception>
+    public static NpgsqlConnection CreatePostgresConnection()
+    {
+        try
+        {
+            return new NpgsqlConnection(_connectionString);
+        }
+        catch (Exception ex)
+        {
+            throw new WatchDogDatabaseException(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Gets the SQL query string.
+    /// </summary>
+    /// <returns>System.String.</returns>
+    public static string GetSqlQueryString() =>
+        WatchDogSqlDriverOption.SqlDriverOption switch
+        {
+            WatchDogSqlDriverEnum.MSSQL => @$"
                                   IF OBJECT_ID('dbo.{Constants.WatchLogTableName}', 'U') IS NULL CREATE TABLE {Constants.WatchLogTableName} (
                                   id              INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
                                   responseBody    VARCHAR(max),
@@ -94,7 +166,7 @@ namespace WatchDog.src.Data
                              );
                         ",
 
-                WatchDogSqlDriverEnum.MySql => @$"
+            WatchDogSqlDriverEnum.MySql => @$"
                              CREATE TABLE IF NOT EXISTS {Constants.WatchLogTableName} (
                               id              INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
                               responseBody    TEXT(65535),
@@ -133,7 +205,7 @@ namespace WatchDog.src.Data
                              );
                         ",
 
-                WatchDogSqlDriverEnum.PostgreSql => @$"
+            WatchDogSqlDriverEnum.PostgreSql => @$"
                              CREATE TABLE IF NOT EXISTS {Constants.WatchLogTableName} (
                               id              SERIAL PRIMARY KEY,
                               responseBody    VARCHAR,
@@ -171,43 +243,11 @@ namespace WatchDog.src.Data
                                 lineNumber    INTEGER
                              );
                         ",
-                _ => ""
-            };
+            _ => ""
+        };
 
-        public static NpgsqlConnection CreatePostgresConnection()
-        {
-            try
-            {
-                return new NpgsqlConnection(_connectionString);
-            }
-            catch (Exception ex)
-            {
-                throw new WatchDogDatabaseException(ex.Message);
-            }
-        }
-
-        public static MySqlConnection CreateMySQLConnection()
-        {
-            try
-            {
-                return new MySqlConnection(_connectionString);
-            }
-            catch (Exception ex)
-            {
-                throw new WatchDogDatabaseException(ex.Message);
-            }
-        }
-
-        public static SqlConnection CreateMSSQLConnection()
-        {
-            try
-            {
-                return new SqlConnection(_connectionString);
-            }
-            catch (Exception ex)
-            {
-                throw new WatchDogDatabaseException(ex.Message);
-            }
-        }
-    }
+    /// <summary>
+    /// Migrates this instance.
+    /// </summary>
+    public static void Migrate() => BootstrapTables().Wait();
 }

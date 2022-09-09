@@ -1,19 +1,20 @@
-﻿using WatchDog.src.Helpers;
-using WatchDog.src.Interfaces;
-using WatchDog.src.Models;
+﻿namespace WatchDog.src.Services;
 
-namespace WatchDog.src.Services
+using global::WatchDog.src.Helpers;
+using global::WatchDog.src.Interfaces;
+using global::WatchDog.src.Models;
+
+internal class LoggerService : ILoggerService
 {
-    internal class LoggerService : ILoggerService
-    {
-        public void ClearWatchLogs()
-        {
-            if (AutoClearModel.IsAutoClear)
-            {
-                LiteDBHelper.ClearWatchLog();
-                LiteDBHelper.ClearWatchExceptionLog();
-            }
-
-        }
-    }
+	/// <summary>
+	/// Clears the watch logs.
+	/// </summary>
+	public void ClearWatchLogs()
+	{
+		if (AutoClearModel.IsAutoClear)
+		{
+			_ = LiteDBHelper.ClearWatchLog();
+			_ = LiteDBHelper.ClearWatchExceptionLog();
+		}
+	}
 }

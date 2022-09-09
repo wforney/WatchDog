@@ -1,15 +1,11 @@
-﻿using System;
+﻿namespace WatchDog.src.Exceptions;
 
-namespace WatchDog.src.Exceptions
+internal class WatchDogAuthenticationException : Exception
 {
-    internal class WatchDogAuthenticationException : Exception
+    internal WatchDogAuthenticationException() { }
+
+    internal WatchDogAuthenticationException(string message)
+        : base($"WatchDog Authentication Exception: {message}")
     {
-        internal WatchDogAuthenticationException() { }
-
-        internal WatchDogAuthenticationException(string message)
-            : base(String.Format("WatchDog Authentication Exception: {0}", message))
-        {
-
-        }
     }
 }

@@ -1,108 +1,101 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿namespace WatchDog.src.Services;
+
+using global::WatchDog.src.Enums;
+using global::WatchDog.src.Interfaces;
+using global::WatchDog.src.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using WatchDog.src.Enums;
-using WatchDog.src.Interfaces;
-using WatchDog.src.Models;
 
-namespace WatchDog.src.Services
+internal class AutoLogClearerBackgroundService : BackgroundService
 {
-    internal class AutoLogClearerBackgroundService : BackgroundService
-    {
-        private bool isProcessing;
-        private ILogger<AutoLogClearerBackgroundService> logger;
-        private readonly IServiceProvider serviceProvider;
+	private readonly ILogger<AutoLogClearerBackgroundService> logger;
+	private readonly IServiceProvider serviceProvider;
+	private bool isProcessing;
 
-        public AutoLogClearerBackgroundService(ILogger<AutoLogClearerBackgroundService> logger, IServiceProvider serviceProvider)
-        {
-            this.logger = logger;
-            this.serviceProvider = serviceProvider;
-        }
+	/// <summary>
+	/// Initializes a new instance of the <see cref="AutoLogClearerBackgroundService" /> class.
+	/// </summary>
+	/// <param name="logger">The logger.</param>
+	/// <param name="serviceProvider">The service provider.</param>
+	public AutoLogClearerBackgroundService(ILogger<AutoLogClearerBackgroundService> logger, IServiceProvider serviceProvider)
+	{
+		this.logger = logger;
+		this.serviceProvider = serviceProvider;
+	}
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                if (!isProcessing)
-                {
-                    isProcessing = true;
-                }
-                else
-                {
-                    return;
-                }
+	/// <summary>
+	/// Triggered when the application host is performing a graceful shutdown.
+	/// </summary>
+	/// <param name="cancellationToken">
+	/// Indicates that the shutdown process should no longer be graceful.
+	/// </param>
+	/// <returns>A <see cref="Task" />.</returns>
+	public override Task StopAsync(CancellationToken cancellationToken)
+	{
+		logger.LogInformation("Log Clearer Background service is stopping");
+		return base.StopAsync(cancellationToken);
+	}
 
-                TimeSpan minute;
-                var schedule = AutoClearModel.ClearTimeSchedule;
+	protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+	{
+		while (!stoppingToken.IsCancellationRequested)
+		{
+			if (isProcessing)
+			{
+				return;
+			}
 
-                switch (schedule)
-                {
-                    case WatchDogAutoClearScheduleEnum.Daily:
-                        minute = TimeSpan.FromDays(1);
-                        break;
-                    case WatchDogAutoClearScheduleEnum.Weekly:
-                        minute = TimeSpan.FromDays(7);
-                        break;
-                    case WatchDogAutoClearScheduleEnum.Monthly:
-                        minute = TimeSpan.FromDays(30);
-                        break;
-                    case WatchDogAutoClearScheduleEnum.Quarterly:
-                        minute = TimeSpan.FromDays(90);
-                        break;
-                    default:
-                        minute = TimeSpan.FromDays(7);
-                        break;
+			isProcessing = true;
 
-                }
-                var start = DateTime.UtcNow;
-                while (true)
-                {
-                    var remaining = (minute - (DateTime.UtcNow - start)).TotalMilliseconds;
-                    if (remaining <= 0)
-                        break;
-                    if (remaining > Int16.MaxValue)
-                        remaining = Int16.MaxValue;
-                    await Task.Delay(TimeSpan.FromMilliseconds(remaining));
-                }
-                await DoWorkAsync();
-                isProcessing = false;
-            }
-        }
+			var schedule = AutoClearModel.ClearTimeSchedule;
+			var minute = schedule switch
+			{
+				WatchDogAutoClearScheduleEnum.Daily => TimeSpan.FromDays(1),
+				WatchDogAutoClearScheduleEnum.Weekly => TimeSpan.FromDays(7),
+				WatchDogAutoClearScheduleEnum.Monthly => TimeSpan.FromDays(30),
+				WatchDogAutoClearScheduleEnum.Quarterly => TimeSpan.FromDays(90),
+				_ => TimeSpan.FromDays(7),
+			};
+			var start = DateTime.UtcNow;
+			while (true)
+			{
+				var remaining = (minute - (DateTime.UtcNow - start)).TotalMilliseconds;
+				if (remaining <= 0)
+					break;
+				if (remaining > short.MaxValue)
+					remaining = short.MaxValue;
+				await Task.Delay(TimeSpan.FromMilliseconds(remaining), stoppingToken);
+			}
 
-        private async Task DoWorkAsync()
-        {
-            try
-            {
-                using (var scope = serviceProvider.CreateScope())
-                {
-                    var loggerService = scope.ServiceProvider.GetService<ILoggerService>();
-                    try
-                    {
-                        logger.LogInformation("Log Clearer Background service is starting");
-                        logger.LogInformation($"Log is clearing...");
-                        loggerService.ClearWatchLogs();
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError(ex.Message);
-                    }
+			await DoWorkAsync();
+			isProcessing = false;
+		}
+	}
 
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogError($"Log Clearer Background service error : {ex.Message}");
-            }
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            logger.LogInformation("Log Clearer Background service is stopping");
-            return Task.CompletedTask;
-        }
-
-    }
+	private async Task DoWorkAsync()
+	{
+		await Task.Run(() =>
+		{
+			try
+			{
+				using var scope = serviceProvider.CreateScope();
+				var loggerService = scope.ServiceProvider.GetRequiredService<ILoggerService>();
+				try
+				{
+					logger.LogInformation("Log Clearer Background service is starting");
+					logger.LogInformation("Log is clearing...");
+					loggerService.ClearWatchLogs();
+				}
+				catch (Exception ex)
+				{
+					logger.LogError(ex, "{Exception}", ex.Message);
+				}
+			}
+			catch (Exception ex)
+			{
+				logger.LogError(ex, "Log Clearer Background service error : {Exception}", ex.Message);
+			}
+		});
+	}
 }

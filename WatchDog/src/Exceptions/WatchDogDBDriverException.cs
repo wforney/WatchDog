@@ -1,13 +1,9 @@
-﻿using System;
+﻿namespace WatchDog.src.Exceptions;
 
-namespace WatchDog.src.Exceptions
+internal class WatchDogDBDriverException : Exception
 {
-    internal class WatchDogDBDriverException : Exception
-    {
-        internal WatchDogDBDriverException(string message)
-            : base(String.Format("WatchDog Database Exception: {0}", message))
-        {
-
-        }
-    }
+	internal WatchDogDBDriverException(string message)
+		: base($"WatchDog Database Exception: {message}")
+	{
+	}
 }

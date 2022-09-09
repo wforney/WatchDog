@@ -1,9 +1,22 @@
-﻿namespace WatchDog.src.Enums
+﻿namespace WatchDog.src.Enums;
+
+/// <summary>
+/// The watch dog SQL driver enumeration.
+/// </summary>
+public enum WatchDogSqlDriverEnum
 {
-    public enum WatchDogSqlDriverEnum
-    {
-        MSSQL = 1,
-        MySql,
-        PostgreSql
-    }
+    /// <summary>
+    /// Microsoft SQL Server
+    /// </summary>
+    MSSQL = 1,
+
+    /// <summary>
+    /// MySQL Server
+    /// </summary>
+    MySql,
+
+    /// <summary>
+    /// PostgreSQL Server
+    /// </summary>
+    PostgreSql
 }
