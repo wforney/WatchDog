@@ -6,9 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="WTCHDGstatics/images/icons/favicon.ico" />
 
+    <link rel="stylesheet" type="text/css" href="WTCHDGstatics/css/bootstrap.min.css" />
     <script src="WTCHDGstatics/js/jquery-3.2.1.min.js"></script>
     <script src="WTCHDGstatics/js/popper.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="WTCHDGstatics/css/bootstrap.min.css" />
     <script src="WTCHDGstatics/js/bootstrap.min.js"></script>
     <script src="WTCHDGstatics/signalr/signalr.js"></script>
     <script src="WTCHDGstatics/js/moment.min.js"></script>
@@ -22,6 +22,7 @@
             background-repeat: no-repeat;
             font-family: 'Avenir Next LT Pro', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
             body[data-theme="dark"] {
                 --logo: url(WTCHDGstatics/images/watchdogLogo.png) no-repeat;
             }
@@ -106,12 +107,10 @@
             overflow: auto
         }
 
-        .logo{
-            height:35px;
+        .logo {
+            height: 35px;
         }
     </style>
-
-
 </head>
 <body>
     <section class="ftco-section pb-5">
@@ -140,8 +139,6 @@
                 <button data-toggle="modal" data-target="#clearLogsModal" class="btn-sm btn btn-dark m-1 float-right">Clear Logs</button>
                 <button onclick="logOut()" class="btn-sm btn btn-dark m-1 float-right">Log out</button>
             </div>
-
-
             <div class="tab-content">
                 <div id="requestTab" class="tab-pane fade in active show">
                     <div class="mb-5 row">
@@ -209,7 +206,6 @@
                         <button onclick="exSearch()" class="btn-sm btn btn-dark m-1">Search</button>
                         <a href="#" onclick="backToList(event)" class="m-1 mx-auto text-right col-md-8">Back to Full List</a>
                         <hr />
-
                     </div>
                     <div class="my-auto mb-5">
                         <b>Realtime Connection: <span id="dot" name="dot" class="dot" style="background-color: dodgerblue"></span></b>
@@ -244,7 +240,6 @@
                         <button onclick="inCodeSearch()" class="btn-sm btn btn-dark m-1">Search</button>
                         <a href="#" onclick="backToList(event)" class="m-1 mx-auto text-right col-md-8">Back to Full List</a>
                         <hr />
-
                     </div>
                     <div class="my-auto mb-5">
                         <b>Realtime Connection: <span id="dot" name="dot" class="dot" style="background-color: dodgerblue"></span></b>
@@ -296,8 +291,6 @@
                             <p style="word-wrap: break-word;"><b>Time Stamp: </b> <span id="startTime"></span></p>
                         </div>
                         <div class="col-md-12 purplebg m mt-3">
-
-
                             <div class="row d-flex justify-content-between mx-1 mx-sm-3 mb-0 pb-0 border-0">
                                 <div class="tabs active" id="tab01">
                                     <h6 class="font-weight-bold">Request</h6>
@@ -310,7 +303,6 @@
                                 </div>
                             </div>
                             <div class="line mb-3"></div>
-
                             <div class="modal-body p-0">
                                 <fieldset id="tab011" class="show">
                                     <div class="">
@@ -337,12 +329,10 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
-
     <div class="modal" id="myExceptionModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -364,17 +354,14 @@
                         <a href="#" id="exStackTraceCopy" onclick="copyToClipboard(event, 'exStackTrace', 'exStackTraceCopy')" style="display:none" class="float-right">Copy</a>
                         <p class="lead"><b>Stack Trace:</b> </p>
                         <pre id="exStackTrace" class="bg-light p-2"></pre>
-
                         <a href="#" id="exReqBodyCopy" onclick="copyToClipboard(event, 'exReqBody', 'exReqBodyCopy')" style="display:none" class="float-right">Copy</a>
                         <p class="lead"><b>Request Body:</b> </p>
                         <pre id="exReqBody" class="bg-light p-2"></pre>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
-
     <div class="modal" id="myLoginModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-backdrop="static" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -384,17 +371,13 @@
                         <form id="myLoginForm">
                             <input class="form-control m-1 mb-3" type="text" placeholder="Enter Username" name="uname" id="uname" required>
                             <input class="form-control m-1" type="password" placeholder="Enter Password" name="psw" id="psw" required>
-
                         </form>
-
                         <button class="btn btn-sm btn-dark m-1 mt-3" style="width:100%" onclick="login()" type="submit">Login</button>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
-
     <div class="modal" id="clearLogsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true" data-keyboard="false">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -409,12 +392,6 @@
             </div>
         </div>
     </div>
-
-
-
-
-
-
     <script type="text/javascript">
         $(document).ready(function () {
             $(".tabs").click(function () {
@@ -468,9 +445,7 @@
                         "<td><b>" + moment(data.log.timestamp).format('LLL') + "</b></td><td>" + data.log.callingFrom + "\nLine:" + data.log.lineNumber + "</td><td>" + data.log.callingMethod + "</td><td>" + data.log.message + "</td></tr > ");
                     $('#tableBodyInCode').prepend(tr);
                 }
-
             }
-
         });
 
         connection
@@ -609,7 +584,7 @@
                     for (var i = 0; i < data.logs.length; i++) {
                         const tr = $("<tr aria-expanded='false' aria-controls='collapse" + i + "' class='collapsed'>" +
                             "<td><b>" + moment(data.logs[i].timestamp).format('LLL') + "</b></td><td>" + data.logs[i].callingFrom + "\nLine:" + data.logs[i].lineNumber + "</td><td>" + data.logs[i].callingMethod + "</td><td>" + data.logs[i].message + "</td></tr > ");
-                        
+
                         $('#tableBodyInCode').append(tr);
                     }
                 }
@@ -855,6 +830,5 @@
             document.getElementById(removeNextId).style.textDecoration = "none";
         }
     </script>
-
 </body>
 </html>
